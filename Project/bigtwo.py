@@ -1,5 +1,3 @@
-# Author: DarkLack0
-
 import random
 
 powers = {  "3D" : 1,  "3C" : 2,  "3H" : 3,  "3S" : 4,
@@ -16,13 +14,10 @@ powers = {  "3D" : 1,  "3C" : 2,  "3H" : 3,  "3S" : 4,
             "AD" : 45, "AC" : 46, "AH" : 47, "AS" : 48,
             "2D" : 49, "2C" : 50, "2H" : 51, "2S" : 52  }
 
-# create and shuffle the deck
+# create the deck
 deck = list(powers.keys())
 
-# add no-card power
-powers[""] = 0
-
-# use multishuffle strategy
+# shuffle the deck
 for i in range(random.randint(10, 100)):
     random.shuffle(deck)
 
@@ -32,10 +27,9 @@ if players_number < 2 or players_number > 4:
     print("Invalid number of players, it is not allowed")
     exit()
 
-# input usernames and their
+# input usernames and create card hand for each user
 names = []
 players_cards = []
-
 for i in range(players_number):
     name = input("Input name of next player: ")
     names.append(name)
@@ -51,7 +45,7 @@ combination = 0
 
 # game
 while True:
-
+    
     # player turn
     while True:
 
@@ -62,8 +56,8 @@ while True:
         for i in range(len(players_cards[current_player])):
             print(i + 1, ' ' * (1-(i+1)//10), end = '')
 
-        userinput = input("\n\nChoose cards to play (0 - to pass): ").split()
-
+        userinput = input("\n\nUse number below cards to play (or 0 - to pass): ").split()
+        
         userchoice = [int(i) - 1 for i in userinput if i.isdigit()]
         userchoice.sort(reverse = True)
 
@@ -71,12 +65,12 @@ while True:
 
             # pass option
             if userchoice[0] < 0:
-
+                
                 # invalid pass
                 if combination == 0:
                     print("You should not pass at the start of the circle")
                     continue
-
+                
                 # valid pass
                 else:
                     print("\nPass")
@@ -93,7 +87,7 @@ while True:
                         print("Current cards:", ' '.join(current_cards))
 
                     break
-
+            
             # check if all choices are valid
             for card_number in userchoice:
 
@@ -112,7 +106,7 @@ while True:
 
                 if len(cards) == 1:
                     user_power = powers[cards[0]]
-
+                
                 elif len(cards) == 2:
                     if cards[0][0] == cards[1][0]:
                         user_power = max(powers[cards[0]], powers[cards[1]])
@@ -150,7 +144,7 @@ while True:
                     # finish the turn
                     passes = 0
                     break
-
+                
                 # check if it is a valid combination
                 elif combination == len(cards):
 
@@ -172,7 +166,7 @@ while True:
                     # weaker combination
                     else:
                         print("Your card is not good enough to beat it, try again")
-
+                
                 # invalid combination
                 else:
                     print("Invalid combination, current combination is", combination, "cards")
@@ -196,5 +190,6 @@ while True:
     current_player = (current_player + 1) % players_number
 
 # result messages
-print(names[winner], " just won!")
-print(names[loser], " just lost!")
+print("\n\nResults!!!\n")
+print(names[winner], "is winner!!")
+print(names[loser], "just lost!")
