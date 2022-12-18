@@ -1,3 +1,5 @@
+# Author: DarkLack0
+
 import random
 
 powers = {  "3D" : 1,  "3C" : 2,  "3H" : 3,  "3S" : 4,
