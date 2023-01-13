@@ -41,6 +41,7 @@ class Game(commands.Cog):
 
     @commands.command()
     async def leave(self, ctx):
+        await ctx.send("leave")
         
 
 
