@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import datetime
-from utilities import is_bot_admin, extension_exists
+from utilities import data_exists, append_content, remove_content
 
 class Root(commands.Cog):   
     def __init__(self, client):
@@ -51,17 +51,17 @@ class Root(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        print(error, ctx.message.content)
         if isinstance(error, commands.CommandNotFound):
             await ctx.send(f"Bot does not have this command: {ctx.message.content}")
 
         else:
+            print(error, ctx.message.content)   
             await ctx.send(error)
 
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def magic(self, ctx):
-        await ctx.send("Scriptluck is not here~ Magic~!")
+        await ctx.send("Scriptluck is here~ Magic~!")
 
     @commands.command(aliases=["i?", "me?"])
     async def whoami(self, ctx):
@@ -74,6 +74,69 @@ class Root(commands.Cog):
     @commands.command(aliases=["admin?"])
     async def amibotadmin(self, ctx):
         await ctx.send({is_bot_admin(ctx.author.id)})
+
+
+    # Base on username and discriminator
+    # @commands.command()
+    # async def add_botadmin(self, ctx, user):
+    #     if not (data_exists("admin.txt", ctx.author.id)):
+    #         await ctx.send("Sorry, you are not admin.")
+    #         return
+
+    #     if (data_exists("admin.txt", user_id)):
+    #         await ctx.send(f"<@{user_id}> has been an admin already")
+    #         return
+
+        
+    #     append_content("admin.txt", user_id)
+    #     await ctx.send("Added admin successfully")
+
+    # Base on id
+    @commands.command()
+    async def add_botadmin_id(self, ctx, user_id):
+        if not (data_exists("admin.txt", ctx.author.id)):
+            await ctx.send("Sorry, you are not admin.")
+            return
+
+        if (data_exists("admin.txt", user_id)):
+            await ctx.send(f"<@{user_id}> has been an admin already")
+            return
+
+        
+        append_content("admin.txt", user_id)
+        await ctx.send(f"<@{user_id}> become an admin successfully")
+
+
+
+    # Base on username and discriminator
+    # @commands.command()
+    # async def remove_botadmin(self, ctx, user):
+    #     if not (data_exists("admin.txt", ctx.author.id)):
+    #         await ctx.send("Sorry, you are not admin.")
+    #         return
+
+    #     if not (data_exists("admin.txt", user_id)):
+    #         await ctx.send(f"<@{user_id}> is not an admin")
+    #         return
+
+        
+    #     remove_content("admin.txt", user_id)
+    #     await ctx.send("Removed admin successfully")
+
+    # Base on user's id
+    @commands.command()
+    async def remove_botadmin_id(self, ctx, user_id):
+        if not (data_exists("admin.txt", ctx.author.id)):
+            await ctx.send("Sorry, you are not admin.")
+            return
+
+        if not (data_exists("admin.txt", user_id)):
+            await ctx.send(f"<@{user_id}> is not an admin")
+            return
+
+        
+        remove_content("admin.txt", user_id)
+        await ctx.send("Removed admin successfully")
 
 
 async def setup(client):

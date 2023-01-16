@@ -7,19 +7,21 @@ class Manage(commands.Cog):
         self.client=client
 
 
+    ##
     @commands.command(aliases=["clear"])
-    async def clean(self, ctx, amount=2):
+    async def clean(self, ctx, amount="2"):
         
         try:
-            if (101>amount>0):
-                await ctx.channel.purge(limit = int(amount))
+            int_amount=int(amount)
+            if (101>int_amount>0):
+                await ctx.channel.purge(limit = int_amount)
                 await ctx.send(f"Cleaned {amount} messages", delete_after=3)
 
             else:
-                await ctx.send("clean quantity should be between 1 and 100, and must be integer", delete_after=3)
+                await ctx.send("clean quantity should be between 1 and 100, and must be an integer", delete_after=3)
 
         except:
-            await ctx.send("clean quantity should be between 1 and 100, and must be integer", delete_after=3)
+            await ctx.send("clean quantity should be between 1 and 100, and must be an integer", delete_after=3)
 
     @commands.command()
     async def create_category(self, ctx, name):

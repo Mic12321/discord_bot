@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import asyncio
 import datetime
-from utilities import is_bot_admin, extension_exists
+from utilities import data_exists, extension_exists
 import os
 
 
@@ -17,7 +17,7 @@ client=commands.Bot(intents=discord.Intents.all(), command_prefix=CLIENT_CMD_PRE
 
 @client.command()
 async def load(ctx, extension_name):
-    if not (is_bot_admin(ctx.author.id)):
+    if not (data_exists("admin.txt", ctx.author.id)):
         await ctx.send("You are not admin")
         return
 
@@ -42,7 +42,7 @@ async def load(ctx, extension_name):
     
 @client.command()
 async def reload(ctx, extension_name):
-    if not (is_bot_admin(ctx.author.id)):
+    if not (data_exists("admin.txt", ctx.author.id)):
         await ctx.send("You are not admin")
         return
 
@@ -68,7 +68,7 @@ async def reload(ctx, extension_name):
 
 @client.command()
 async def unload(ctx, extension_name):
-    if not (is_bot_admin(ctx.author.id)):
+    if not (is_bot_admin("admin.txt", ctx.author.id)):
         await ctx.send("You are not admin")
         return
 
