@@ -31,7 +31,7 @@ class Database:
     def get_data(self,column,table_name):
         con = sqlite3.connect(self.dbname)
         c = con.cursor()
-        c.execute(f"SELECT {colunm} FROM {table_name}")
+        c.execute(f"SELECT {column} FROM {table_name}")
         result = c.fetchall()
         print(result)
         con.commit()
