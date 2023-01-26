@@ -10,7 +10,6 @@ def takepower(elem):
 def straight(cards):
     cards.sort(key = takepower)
     card_powers = [(powers[cards[0]] - 1) // 4, (powers[cards[1]] - 1) // 4, (powers[cards[2]] - 1) // 4, (powers[cards[3]] - 1) // 4, (powers[cards[4]] - 1) // 4]
-    
     if card_powers[0] + 2 == card_powers[1] + 1 == card_powers[2] == card_powers[3] - 1 == card_powers[4] - 2:  # normal straight
         return powers[cards[4]]
 
@@ -59,7 +58,7 @@ def four_of_a_kind(cards):
     if cards[0][0] == cards[1][0] == cards[2][0] == cards[3][0]:        # 3 3 3 3 4 and other
         return powers[cards[3]]
 
-    elif cards[1][0] and cards[2][0] == cards[3][0] == cards[4][0]:     # 3 4 4 4 4 and other
+    elif cards[1][0] == cards[2][0] == cards[3][0] == cards[4][0]:     # 3 4 4 4 4 and other
         return powers[cards[4]]
 
     else:
