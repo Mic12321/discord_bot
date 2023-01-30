@@ -11,7 +11,7 @@ class Player:
         self.hand = hand
 
 class Game():   
-    def __init__(self):
+    def __init__(self, player_ids):
         self.powers = { "3♦" : 1, " 3♣" : 2,  "3♥" : 3,  "3♠" : 4,
                         "4♦" : 5,  "4♣" : 6,  "4♥" : 7,  "4♠" : 8,
                         "5♦" : 9,  "5♣" : 10, "5♥" : 11, "5♠" : 12,
@@ -27,6 +27,16 @@ class Game():
                         "2♦" : 49, "2♣" : 50, "2♥" : 51, "2♠" : 52  }
 
         self.deck = list(self.powers.keys())
+
+        # shuffle the deck
+        for i in range(random.randint(10, 100)):
+            random.shuffle(self.deck)
+
+        # players - save the array of Player objects, it has .name - name and .hand - array of cards
+        self.__players = [Player(f"<@{player_ids[i]}>", [self.deck[j] for j in range(len(self.deck)) if j%4 == i]) for i in range(len(player_ids))]
+
+        # choose the current player accouring to "smallest card" rule :)
+        self.current_player = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))].index(min([min(self.__players[i].hand[i], key=self.takepower) for i in range(len(self.__players))]))
 
         self.passes = 0
         self.current_player = 0
@@ -111,18 +121,6 @@ class Game():
         options = f"/msg user:{self.__players[self.current_player].name} message:{' '.join([str(i+1) + ' ' * (1-(i+1)//10) for i in range(len(self.__players[self.current_player].hand))])}"
 
         return [hand, sorted_hand, options]
-
-    def start(self, players):
-
-        # shuffle the deck
-        for i in range(random.randint(10, 100)):
-            random.shuffle(self.deck)
-
-        # players - save the array of Player objects, it has .name - name and .hand - array of cards
-        self.__players = [Player(f"<@{players[i]}>", [self.deck[j] for j in range(len(self.deck)) if j%4 == i]) for i in range(len(players))]
-
-        # choose the current player accouring to "smallest card" rule :)
-        self.current_player = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))].index(min([min(self.__players[i].hand[i], key=self.takepower) for i in range(len(self.__players))]))
 
     def turn(self, cards):
         userinput = cards.split()
@@ -260,16 +258,16 @@ class Game_Room(commands.Cog):
 
     @commands.command()
     async def create_game_room(self, ctx, room_name="magic"):
-        self.game_room = Game_Room([ctx.message.author.id], room_name, datetime.datetime.now().replace(microsecond=0))
+        game_room = Game_Room([ctx.message.author.id], room_name, datetime.datetime.now().replace(microsecond=0))
 
-        create_game_room_embed=discord.Embed(title=f"{self.game_room.get_room_name()} game room", color=0x3584e4)
+        create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} game room", color=0x3584e4)
         create_game_room_embed.add_field(name="Player amount", value="1")
-        # create_game_room_embed.add_field(name="Created time", value=game_room.get_time_create(), inline=False)
+        create_game_room_embed.add_field(name="Created time", value=game_room.get_time_create(), inline=False)
         create_game_room_embed.add_field(name="Player joined", value=f"{ctx.author.name}#{ctx.author.discriminator}", inline=False)
         # sqliteConnection = sqlite3.connect("game.db")
         # cursor = sqliteConnection.cursor()
         
-        message_id = await ctx.send(embed=create_game_room_embed)
+        await ctx.send(embed=create_game_room_embed)
         write_content("game_file", str(ctx.author.id))
 
 
@@ -307,7 +305,7 @@ class Game_Room(commands.Cog):
 
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
         join_game_embed.add_field(name="Player amount", value=player_amount, inline=False)
-        join_game_embed.add_field(name="Player joined", value=f"{user_name_list}", inline=False)    # what is this: value = f"{var}"? why not value = str(var)?
+        join_game_embed.add_field(name="Player joined", value=f"{user_name_list}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
         await ctx.send(embed=join_game_embed)
 
     @commands.command()
@@ -332,8 +330,7 @@ class Game_Room(commands.Cog):
         ids = [i.strip("\n") for i in file.readlines()]
         file.close()
 
-        self.game = Game
-        self.game.start(ids)
+        self.game = Game(ids)
 
         await ctx.send("Game started")
 
@@ -349,7 +346,7 @@ class Game_Room(commands.Cog):
             one_card = self.game.one_card_only()
             
             if one_card[1] == 0:
-                ctx.send(one_card[0])
+                await ctx.send(one_card[0])
             
             else:
                 game_fin = self.game.game_finished()
@@ -359,9 +356,14 @@ class Game_Room(commands.Cog):
                     await ctx.send(game_fin[0])
                     await ctx.send(game_fin[1])
                     self.game = None
-        else:
-            await ctx.send(f"Last played cards: {' '.join(self.game.current_cards)}")
+            
+            if self.game is not None:
+                for i in self.game.show_deck():
+                    await ctx.send(i)
 
+        else:
+            await ctx.send(output[0])
+            await ctx.send(f"Last played cards: {' '.join(self.game.current_cards)}")
 
 
 async def setup(client):
