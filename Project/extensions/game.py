@@ -6,11 +6,11 @@ from utilities import *
 import random
 
 class Player:
-    def __unit__(self, name, hand):
+    def __init__(self, name, hand):
         self.name = name
         self.hand = hand
 
-class Game():   
+class Game:   
     def __init__(self, player_ids):
         self.powers = { "3♦" : 1, " 3♣" : 2,  "3♥" : 3,  "3♠" : 4,
                         "4♦" : 5,  "4♣" : 6,  "4♥" : 7,  "4♠" : 8,
@@ -36,7 +36,14 @@ class Game():
         self.__players = [Player(f"<@{player_ids[i]}>", [self.deck[j] for j in range(len(self.deck)) if j%4 == i]) for i in range(len(player_ids))]
 
         # choose the current player accouring to "smallest card" rule :)
-        self.current_player = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))].index(min([min(self.__players[i].hand[i], key=self.takepower) for i in range(len(self.__players))]))
+
+        lowest_cards = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))]
+
+        print(1)
+
+        self.current_player = lowest_cards.index(min(lowest_cards, key=self.takepower))
+
+        print(2)
 
         self.passes = 0
         self.current_player = 0
@@ -367,4 +374,4 @@ class Game_Room(commands.Cog):
 
 
 async def setup(client):
-    await client.add_cog(Game_Room(client))
+    await client.add_cog(Game_Room(client, 0, 0))
