@@ -10,8 +10,8 @@ class Player:
         self.name = name
         self.hand = hand
 
-class Game:   
-    def __init__(self, player_ids):
+class Game():   
+    def __init__(self, players):
         self.powers = { "3♦" : 1, " 3♣" : 2,  "3♥" : 3,  "3♠" : 4,
                         "4♦" : 5,  "4♣" : 6,  "4♥" : 7,  "4♠" : 8,
                         "5♦" : 9,  "5♣" : 10, "5♥" : 11, "5♠" : 12,
@@ -33,17 +33,10 @@ class Game:
             random.shuffle(self.deck)
 
         # players - save the array of Player objects, it has .name - name and .hand - array of cards
-        self.__players = [Player(f"<@{player_ids[i]}>", [self.deck[j] for j in range(len(self.deck)) if j%4 == i]) for i in range(len(player_ids))]
+        self.__players = [Player(f"{players[i]}", [self.deck[j] for j in range(len(self.deck)) if j%4 == i]) for i in range(len(players))]
 
         # choose the current player accouring to "smallest card" rule :)
-
-        lowest_cards = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))]
-
-        print(1)
-
-        self.current_player = lowest_cards.index(min(lowest_cards, key=self.takepower))
-
-        print(2)
+        self.current_player = [min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))].index(min([min(self.__players[i].hand, key=self.takepower) for i in range(len(self.__players))], key=self.takepower))
 
         self.passes = 0
         self.current_player = 0
@@ -123,11 +116,11 @@ class Game:
             return 0
 
     def show_deck(self):
-        hand = f"/msg user:{self.__players[self.current_player].name} message:{' '.join(self.__players[self.current_player].hand)}"
         sorted_hand = f"/msg user:{self.__players[self.current_player].name} message:{' '.join(sorted(self.__players[self.current_player].hand, key=self.takepower))}"
-        options = f"/msg user:{self.__players[self.current_player].name} message:{' '.join([str(i+1) + ' ' * (1-(i+1)//10) for i in range(len(self.__players[self.current_player].hand))])}"
+        hand = f"/msg user:{self.__players[self.current_player].name} message:{' '.join(self.__players[self.current_player].hand)}"
+        options = f"/msg user:{self.__players[self.current_player].name} message:{' '.join([str(i+1) + ' ' * 6 for i in range(len(self.__players[self.current_player].hand))])}"
 
-        return [hand, sorted_hand, options]
+        return [sorted_hand, hand, options]
 
     def turn(self, cards):
         userinput = cards.split()
@@ -267,10 +260,12 @@ class Game_Room(commands.Cog):
     async def create_game_room(self, ctx, room_name="magic"):
         game_room = Game_Room([ctx.message.author.id], room_name, datetime.datetime.now().replace(microsecond=0))
 
+        self.__members = [f"@{ctx.author.name}#{ctx.author.discriminator}"]
+
         create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} game room", color=0x3584e4)
         create_game_room_embed.add_field(name="Player amount", value="1")
         create_game_room_embed.add_field(name="Created time", value=game_room.get_time_create(), inline=False)
-        create_game_room_embed.add_field(name="Player joined", value=f"{ctx.author.name}#{ctx.author.discriminator}", inline=False)
+        create_game_room_embed.add_field(name="Player joined", value=f"@{ctx.author.name}#{ctx.author.discriminator}", inline=False)
         # sqliteConnection = sqlite3.connect("game.db")
         # cursor = sqliteConnection.cursor()
         
@@ -296,6 +291,7 @@ class Game_Room(commands.Cog):
             return
 
         append_content("game_file", ctx.author.id)
+        self.__members.append(f"@{ctx.author.name}#{ctx.author.discriminator}")
         await ctx.send(f"<@{ctx.author.id}> You joined the game successfully")
 
         file=open("game_file", "r")
@@ -307,8 +303,7 @@ class Game_Room(commands.Cog):
                 i = i[:-1]
 
             user = await self.client.fetch_user(int(i))
-            user_name_list.append(str(user.name))
-
+            self.__members.append(f"{user.name}#{user.distdiscriminator}")
 
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
         join_game_embed.add_field(name="Player amount", value=player_amount, inline=False)
@@ -322,7 +317,11 @@ class Game_Room(commands.Cog):
             return
 
         remove_content("game_file", ctx.author.id)
+        self.__members.remove(f"@{ctx.author.name}#{ctx.author.discriminator}")
         await ctx.send(f"<@{ctx.author.id}> You have left the game successfully")
+        await ctx.send("Game finished because of the leaver! Liver lost, others won!")
+        self.game = None
+
 
     def get_room_name(self):
         return self.__room_name
@@ -332,12 +331,7 @@ class Game_Room(commands.Cog):
 
     @commands.command()
     async def start_game(self, ctx):
-
-        file = open("game_file", "r")
-        ids = [i.strip("\n") for i in file.readlines()]
-        file.close()
-
-        self.game = Game(ids)
+        self.game = Game(self.__members)
 
         await ctx.send("Game started")
 
@@ -345,8 +339,8 @@ class Game_Room(commands.Cog):
             await ctx.send(i)
 
     @commands.command()
-    async def play(self, ctx, cards):
-        output = self.game.turn(cards)
+    async def play(self, ctx, *cards):
+        output = self.game.turn(' '.join(cards))
         await ctx.send(output[0])
 
         if output[1] == 0:
