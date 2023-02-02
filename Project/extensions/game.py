@@ -337,8 +337,13 @@ class Game_Room(commands.Cog):
 
         await ctx.send("Game started")
 
-        for i in self.game.show_deck():
-            await ctx.send(i)
+        magic = self.game.show_deck()
+        user = await self.client.fetch_user(magic[0])
+        user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
+        user_hand_embed.add_field(name="Sorted Deck", value=magic[1][0], inline=False)
+        user_hand_embed.add_field(name="Hand", value=magic[1][1], inline=False)
+        user_hand_embed.add_field(name="Choice", value=magic[1][2], inline=False)
+        await user.send(embed=user_hand_embed)
 
     @commands.command()
     async def play(self, ctx, *cards):
