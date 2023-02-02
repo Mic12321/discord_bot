@@ -309,7 +309,7 @@ class Game_Room(commands.Cog):
 
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
         join_game_embed.add_field(name="Player amount", value=player_amount, inline=False)
-        join_game_embed.add_field(name="Player joined", value=f"{user_name_list}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
+        join_game_embed.add_field(name="Player joined", value=f"{self.__members}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
         await ctx.send(embed=join_game_embed)
 
     @commands.command()
