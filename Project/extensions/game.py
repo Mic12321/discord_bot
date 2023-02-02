@@ -296,17 +296,6 @@ class Game_Room(commands.Cog):
         self.__members.append(f"<@{ctx.author.id}>")
         await ctx.send(f"<@{ctx.author.id}> You joined the game successfully")
 
-        file=open("game_file", "r")
-        content=file.readlines()
-        player_amount=len(content)
-        user_name_list=[]
-        for i in content:
-            if(i[-1] == '\n'):
-                i = i[:-1]
-
-            user = await self.client.fetch_user(int(i))
-            self.__members.append(f"<@{user.id}>")
-
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
         join_game_embed.add_field(name="Player amount", value=player_amount, inline=False)
         join_game_embed.add_field(name="Player joined", value=f"{self.__members}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
