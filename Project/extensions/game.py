@@ -13,19 +13,19 @@ class Player:
 
 class Game:   
     def __init__(self, players):
-        self.powers = { "3♦" : 1, " 3♣" : 2,  "3♥" : 3,  "3♠" : 4,
-                        "4♦" : 5,  "4♣" : 6,  "4♥" : 7,  "4♠" : 8,
-                        "5♦" : 9,  "5♣" : 10, "5♥" : 11, "5♠" : 12,
-                        "6♦" : 13, "6♣" : 14, "6♥" : 15, "6♠" : 16,
-                        "7♦" : 17, "7♣" : 18, "7♥" : 19, "7♠" : 20,
-                        "8♦" : 21, "8♣" : 22, "8♥" : 23, "8♠" : 24,
-                        "9♦" : 25, "9♣" : 26, "9♥" : 27, "9♠" : 28,
-                        "T♦" : 29, "T♣" : 30, "T♥" : 31, "T♠" : 32,
-                        "J♦" : 33, "J♣" : 34, "J♥" : 35, "J♠" : 36,
-                        "Q♦" : 37, "Q♣" : 38, "Q♥" : 39, "Q♠" : 40,
-                        "K♦" : 41, "K♣" : 42, "K♥" : 43, "K♠" : 44,
-                        "A♦" : 45, "A♣" : 46, "A♥" : 47, "A♠" : 48,
-                        "2♦" : 49, "2♣" : 50, "2♥" : 51, "2♠" : 52  }
+        self.powers = { "3:diamonds:" : 1, " 3:skull_crossbones:" : 2,  "3:hearts:" : 3,  "3:heart_on_fire:" : 4,
+                        "4:diamonds:" : 5,  "4:skull_crossbones:" : 6,  "4:hearts:" : 7,  "4:heart_on_fire:" : 8,
+                        "5:diamonds:" : 9,  "5:skull_crossbones:" : 10, "5:hearts:" : 11, "5:heart_on_fire:" : 12,
+                        "6:diamonds:" : 13, "6:skull_crossbones:" : 14, "6:hearts:" : 15, "6:heart_on_fire:" : 16,
+                        "7:diamonds:" : 17, "7:skull_crossbones:" : 18, "7:hearts:" : 19, "7:heart_on_fire:" : 20,
+                        "8:diamonds:" : 21, "8:skull_crossbones:" : 22, "8:hearts:" : 23, "8:heart_on_fire:" : 24,
+                        "9:diamonds:" : 25, "9:skull_crossbones:" : 26, "9:hearts:" : 27, "9:heart_on_fire:" : 28,
+                        "T:diamonds:" : 29, "T:skull_crossbones:" : 30, "T:hearts:" : 31, "T:heart_on_fire:" : 32,
+                        "J:diamonds:" : 33, "J:skull_crossbones:" : 34, "J:hearts:" : 35, "J:heart_on_fire:" : 36,
+                        "Q:diamonds:" : 37, "Q:skull_crossbones:" : 38, "Q:hearts:" : 39, "Q:heart_on_fire:" : 40,
+                        "K:diamonds:" : 41, "K:skull_crossbones:" : 42, "K:hearts:" : 43, "K:heart_on_fire:" : 44,
+                        "A:diamonds:" : 45, "A:skull_crossbones:" : 46, "A:hearts:" : 47, "A:heart_on_fire:" : 48,
+                        "2:diamonds:" : 49, "2:skull_crossbones:" : 50, "2:hearts:" : 51, "2:heart_on_fire:" : 52  }
 
         self.deck = list(self.powers.keys())
 
@@ -34,7 +34,7 @@ class Game:
             random.shuffle(self.deck)
 
         # players - save the array of Player objects, it has .name - name and .hand - array of cards
-        self.__players = [Player(f"{players[i]}", sorted([self.deck[j] for j in range(len(self.deck)) if j%4 == i])) for i in range(len(players))]
+        self.__players = [Player(f"{players[i]}", sorted([self.deck[j] for j in range(len(self.deck)) if j%4 == i], key = self.takepower)) for i in range(len(players))]
 
         # use random order for turns
         random.shuffle(self.__players)
@@ -81,7 +81,7 @@ class Game:
 
     # check if cards is a flush
     def flush(self, cards):
-        if cards[0][1] == cards[1][1] == cards[2][1] == cards[3][1] == cards[4][1]:
+        if cards[0][1:] == cards[1][1:] == cards[2][1:] == cards[3][1:] == cards[4][1:]:
             return self.powers[cards[4]]
 
         else:
@@ -129,7 +129,7 @@ class Game:
     def show_deck(self, player):
         user_hand = player.hand
         hand = ' '.join(user_hand)
-        options = ' '.join([str(i+1) + ' ' * 6 for i in range(len(user_hand))])
+        options = " .. " + ' . . '.join([str(i+1) + ' .' * ((i % 4) != 2) * (i != (len(user_hand) - 1)) for i in range(len(user_hand))])
 
         return [player.id, hand, options]
 
@@ -222,8 +222,8 @@ class Game:
                 self.current_cards = cards.copy()
                 self.current_power = self.user_power
 
-                # remove the played cards from the handclient
-                for card_number in userchoice:
+                # remove the played cards from the hand
+                for card_number in sorted(userchoice, reverse = True):
                     del self.__players[self.current_player].hand[card_number]
 
                 # finish the turn
@@ -238,6 +238,9 @@ class Game:
         else:
             return [f"Invalid combination, current combination is {self.combination} cards", -1]
     
+    def next_turn(self):
+        self.current_player = (self.current_player + 1) % len(self.__players)
+
     def one_card_only(self):
         if len(self.__players[self.current_player].hand) == 1:
             return [f"{self.__players[self.current_player].name} has only 1 more card!", 0]
@@ -264,12 +267,14 @@ class Game_Room(commands.Cog):
         self.client = client
         self.__room_name = room_name
         self.__time_create = time_create
+        self.__game = None
+        self.__members = []
 
     @commands.command()
     async def create_game_room(self, ctx, room_name="Magic"):
         game_room = Game_Room([ctx.message.author.id], room_name, datetime.datetime.now().replace(microsecond=0))
 
-        self.__members = [f"<@{ctx.author.id}>"]
+        self.__members.append(f"<@{ctx.author.id}>")
 
         create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} Game-room", color=0x3584e4)
         create_game_room_embed.add_field(name="Player amount", value=len(self.__members))
@@ -317,8 +322,8 @@ class Game_Room(commands.Cog):
         remove_content("game_file", ctx.author.id)
         self.__members.remove(f"<@{ctx.author.id}>")
         await ctx.send(f"<@{ctx.author.id}> You have left the game successfully")
-        await ctx.send(f"Game finished because of the leaver! <@{ctx.author.id}> lost, others won!")
-        self.game = None
+        await ctx.send(f"Game finished because of the leaver! <@{ctx.author.id}> is loser, {' '.join(self.__members)} are winners!")
+        self.__game = None
 
 
     def get_room_name(self):
@@ -329,75 +334,78 @@ class Game_Room(commands.Cog):
 
     @commands.command()
     async def start_game(self, ctx):
+        if 0 < len(self.__members) < 5:
 
-        if 1 < len(self.__members) < 5:
-
-            self.game = Game(self.__members)
+            self.__game = Game(self.__members)
 
             await ctx.send("Game started")
 
-            magicarr = self.game.show_all_decks()
+            magicarr = self.__game.show_all_decks()
 
             for magic in magicarr:
                 user = await self.client.fetch_user(magic[0])
                 user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
-                user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
-                user_hand_embed.add_field(name="Choice", value=magic[2], inline=False)
+                user_hand_embed.add_field(name=magic[1], value=magic[2], inline=False)
                 await user.send(embed=user_hand_embed)
-                await user.send(f"{self.game.show_current_user().name} Start this game")
+                await user.send(f"{self.__game.show_current_user().name} Start this game")
         
         else:
             await ctx.send("Invalid number of players :(")
 
     @commands.command()
     async def play(self, ctx, *cards):
-        current_userid = self.game.show_current_user().id
 
-        if ctx.author.id == current_userid:
-            output = self.game.turn(' '.join(cards))
+        # game is not started
+        if self.__game is None:
+            await ctx.send("Game... IS NOT STARTED!!!")
+            return  
+    
+        # invalid player try to play (not his/her turn)
+        if ctx.author.id != self.__game.show_current_user().id:
+            await ctx.send(f"It is NOT your turn now! Please ask {self.__game.show_current_user().name} to hurry up!")
+            return  
 
-            if output[1] == 0:
-                for userid in self.game.show_all_userids():
-                    user = await self.client.fetch_user(userid)
-                    await user.send(output[0])
+        output = self.__game.turn(' '.join(cards))
+        # invalid turn
+        if output[1] != 0: 
+            await ctx.send(output[0])
+            last_played_card_embed = discord.Embed(title=f"Last cards played: {' '.join(self.__game.current_cards)}", color=0xffffff)
+            await ctx.send(embed = last_played_card_embed)
+            return  
 
-                one_card = self.game.one_card_only()
+        for userid in self.__game.show_all_userids():
+            user = await self.client.fetch_user(userid)
+            await user.send(output[0])
 
-                if one_card[1] == 0:
-                    for userid in self.game.show_all_userids():
-                        user = await self.client.fetch_user(userid)
-                        await user.send(one_card[1][0])
-                
-                else:
-                    game_fin = self.game.game_finished()
+        one_card = self.__game.one_card_only()
 
-                    if game_fin[2] == 0:
-                        game_fin_embed = discord.Embed(title="Game finished!", color=0xffffff)
-                        game_fin_embed.add_field(name="Winner", value=game_fin[0], inline=False)
-                        game_fin_embed.add_field(name="Loser", value=game_fin[1], inline=False)
-
-                        for userid in self.game.show_all_userids():
-                            user = await self.client.fetch_user(userid)
-                            await user.send(embed = game_fin_embed)
-
-                        self.game = None
-                
-                if self.game is not None:
-                    magic = self.game.show_deck(self.game.show_current_user())
-                    user = await self.client.fetch_user(magic[0])
-                    user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
-                    user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
-                    user_hand_embed.add_field(name="Choice", value=magic[2], inline=False)
-                    await user.send(embed = user_hand_embed)
-
-            else:
-                await ctx.send(output[0])
-                last_played_card_embed = discord.Embed(title=f"Last cards played: {' '.join(self.game.current_cards)}", color=0xffffff)
-                await ctx.send(embed = last_played_card_embed)
+        if one_card[1] == 0:
+            for userid in self.__game.show_all_userids():
+                user = await self.client.fetch_user(userid)
+                await user.send(one_card[1][0])
         
         else:
-            ctx.send(f"It is NOT your turn now!, please ask {self.game.show_current_user().name} to hurry up!")
+            game_fin = self.__game.game_finished()
 
+            if game_fin[2] == 0:
+                game_fin_embed = discord.Embed(title="Game finished!", color=0xffffff)
+                game_fin_embed.add_field(name="Winner", value=game_fin[0], inline=False)
+                game_fin_embed.add_field(name="Loser", value=game_fin[1], inline=False)
+
+                for userid in self.__game.show_all_userids():
+                    user = await self.client.fetch_user(userid)
+                    await user.send(embed = game_fin_embed)
+
+                self.__game = None
+
+        # game is not finished yet
+        if self.__game is not None:
+            magic = self.__game.show_deck(self.__game.show_current_user())
+            user = await self.client.fetch_user(magic[0])
+            user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
+            user_hand_embed.add_field(name=magic[1], value=magic[2], inline=False)
+            await user.send(embed = user_hand_embed)
+            self.__game.next_turn()
 
 async def setup(client):
     await client.add_cog(Game_Room(client, 0, 0))
