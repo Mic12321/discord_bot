@@ -334,7 +334,7 @@ class Game_Room(commands.Cog):
 
     @commands.command()
     async def start_game(self, ctx):
-        if 0 < len(self.__members) < 5:
+        if 1 < len(self.__members) < 5:
 
             self.__game = Game(self.__members)
 
