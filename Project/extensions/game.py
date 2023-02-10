@@ -9,7 +9,7 @@ class Player:
     def __init__(self, name, hand):
         self.name = name
         self.hand = hand
-        self.id = name[2:-1]
+        self.id = int(name[2:-1])
 
 class Game:   
     def __init__(self, players):
@@ -34,7 +34,7 @@ class Game:
             random.shuffle(self.deck)
 
         # players - save the array of Player objects, it has .name - name and .hand - array of cards
-        self.__players = [Player(f"{players[i]}", [self.deck[j] for j in range(len(self.deck)) if j%4 == i].sort()) for i in range(len(players))]
+        self.__players = [Player(f"{players[i]}", sorted([self.deck[j] for j in range(len(self.deck)) if j%4 == i])) for i in range(len(players))]
 
         # use random order for turns
         random.shuffle(self.__players)
@@ -120,22 +120,22 @@ class Game:
     def show_all_userids(self):
         return [player.id for player in self.__players]
 
-    def show_current_userid(self):
-        return self.__players[self.current_player].id
+    def show_current_user(self):
+        return self.__players[self.current_player]
 
     def show_all_decks(self):
         return [self.show_deck(player) for player in self.__players]
 
     def show_deck(self, player):
         user_hand = player.hand
-        hand = "||" + ' '.join(user_hand) + "||"
+        hand = ' '.join(user_hand)
         options = ' '.join([str(i+1) + ' ' * 6 for i in range(len(user_hand))])
 
         return [player.id, hand, options]
 
     def turn(self, cards):
         userinput = cards.split()
-        userchoice = [int(i) - 1 for i in userinput if i.isdigit()].sort()
+        userchoice = sorted([int(i) - 1 for i in userinput if i.isdigit()])
 
         # invalid choices
         if len(userchoice) != len(userinput) or not userchoice:
@@ -160,7 +160,7 @@ class Game:
                     return ["All people pass", 0]
 
                 else:
-                    return [f"{self.__players[self.current_player].name} Pass... Current cards: ||{' '.join(self.current_cards)}||", 0]
+                    return [f"{self.__players[self.current_player].name} Pass... Current cards: {' '.join(self.current_cards)}", 0]
         
         # check if all choices are valid
         for card_number in userchoice:
@@ -228,7 +228,7 @@ class Game:
 
                 # finish the turn
                 self.passes = 0
-                return [f"{self.__players[self.current_player].name} Played: ||{' '.join(cards)}||", 0]
+                return [f"{self.__players[self.current_player].name} Played: {' '.join(cards)}", 0]
 
             # weaker combination
             else:
@@ -272,7 +272,7 @@ class Game_Room(commands.Cog):
         self.__members = [f"<@{ctx.author.id}>"]
 
         create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} game room", color=0x3584e4)
-        create_game_room_embed.add_field(name="Player amount", value="1")
+        create_game_room_embed.add_field(name="Player amount", value=len(self.__members))
         create_game_room_embed.add_field(name="Created time", value=game_room.get_time_create(), inline=False)
         create_game_room_embed.add_field(name="Player joined", value=f"{' '.join(self.__members)}", inline=False)
         # sqliteConnection = sqlite3.connect("game.db")
@@ -304,7 +304,7 @@ class Game_Room(commands.Cog):
         await ctx.send(f"<@{ctx.author.id}> You joined the game successfully")
 
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
-        join_game_embed.add_field(name="Player amount", value=player_amount, inline=False)
+        join_game_embed.add_field(name="Player amount", value=len(self.__members), inline=False)
         join_game_embed.add_field(name="Player joined", value=f"{' '.join(self.__members)}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
         await ctx.send(embed=join_game_embed)
 
@@ -333,7 +333,7 @@ class Game_Room(commands.Cog):
 
         await ctx.send("Game started")
 
-        magicarr = self.game.show_decks()
+        magicarr = self.game.show_all_decks()
 
         for magic in magicarr:
             user = await self.client.fetch_user(magic[0])
@@ -341,29 +341,26 @@ class Game_Room(commands.Cog):
             user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
             user_hand_embed.add_field(name="Choice", value=magic[2], inline=False)
             await user.send(embed=user_hand_embed)
-            await user.send(f"@<{magicarr[0][0]}> Start this game")
+            await user.send(f"{self.game.show_current_user().name} Start this game")
 
     @commands.command()
     async def play(self, ctx, *cards):
-        current_userid = self.game.show_current_userid()
+        current_userid = self.game.show_current_user().id
 
         if ctx.author.id == current_userid:
             output = self.game.turn(' '.join(cards))
 
             if output[1] == 0:
-
                 for userid in self.game.show_all_userids():
                     user = await self.client.fetch_user(userid)
                     await user.send(output[0])
 
                 one_card = self.game.one_card_only()
-                
-                if one_card[1] == 0:
-                    one_card_embed = discord.Embed(title=one_card[0], color=0xffffff)
 
+                if one_card[1] == 0:
                     for userid in self.game.show_all_userids():
                         user = await self.client.fetch_user(userid)
-                        await user.send(embed = one_card_embed)
+                        await user.send(one_card[1][0])
                 
                 else:
                     game_fin = self.game.game_finished()
@@ -380,7 +377,7 @@ class Game_Room(commands.Cog):
                         self.game = None
                 
                 if self.game is not None:
-                    magic = self.game.show_deck(self.game.show_current_userid())
+                    magic = self.game.show_deck(self.game.show_current_user())
                     user = await self.client.fetch_user(magic[0])
                     user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
                     user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
@@ -389,11 +386,11 @@ class Game_Room(commands.Cog):
 
             else:
                 await ctx.send(output[0])
-                last_played_card_embed = discord.Embed(title=f"Last cards played: ||{' '.join(self.game.current_cards)}||", color=0xffffff)
+                last_played_card_embed = discord.Embed(title=f"Last cards played: {' '.join(self.game.current_cards)}", color=0xffffff)
                 await ctx.send(embed = last_played_card_embed)
         
         else:
-            ctx.send(f"It is NOT your turn now!, please ask @<{self.game.show_current_userid()}> to hurry up!")
+            ctx.send(f"It is NOT your turn now!, please ask {self.game.show_current_user().name} to hurry up!")
 
 
 async def setup(client):
