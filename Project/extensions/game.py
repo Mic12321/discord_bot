@@ -266,15 +266,15 @@ class Game_Room(commands.Cog):
         self.__time_create = time_create
 
     @commands.command()
-    async def create_game_room(self, ctx, room_name="magic"):
+    async def create_game_room(self, ctx, room_name="Magic"):
         game_room = Game_Room([ctx.message.author.id], room_name, datetime.datetime.now().replace(microsecond=0))
 
         self.__members = [f"<@{ctx.author.id}>"]
 
-        create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} game room", color=0x3584e4)
+        create_game_room_embed=discord.Embed(title=f"{game_room.get_room_name()} Game-room", color=0x3584e4)
         create_game_room_embed.add_field(name="Player amount", value=len(self.__members))
         create_game_room_embed.add_field(name="Created time", value=game_room.get_time_create(), inline=False)
-        create_game_room_embed.add_field(name="Player joined", value=f"{' '.join(self.__members)}", inline=False)
+        create_game_room_embed.add_field(name="Players", value=f"{' '.join(self.__members)}", inline=False)
         # sqliteConnection = sqlite3.connect("game.db")
         # cursor = sqliteConnection.cursor()
         
@@ -283,7 +283,7 @@ class Game_Room(commands.Cog):
 
 
     @commands.command()
-    async def join_room(self, ctx, room_name="magic"):
+    async def join_room(self, ctx, room_name="Magic"):
         if (data_exists("game_file", ctx.author.id)):
             await ctx.send(f"<@{ctx.author.id}> You have joined the game already")
             return
@@ -305,7 +305,7 @@ class Game_Room(commands.Cog):
 
         join_game_embed=discord.Embed(title=f"Game room", color=0x3584e4)
         join_game_embed.add_field(name="Player amount", value=len(self.__members), inline=False)
-        join_game_embed.add_field(name="Player joined", value=f"{' '.join(self.__members)}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
+        join_game_embed.add_field(name="Players", value=f"{' '.join(self.__members)}", inline=False)    # what is this: 'value = f"{var}"'? why not 'value = str(var)'?
         await ctx.send(embed=join_game_embed)
 
     @commands.command()
@@ -329,19 +329,25 @@ class Game_Room(commands.Cog):
 
     @commands.command()
     async def start_game(self, ctx):
-        self.game = Game(self.__members)
 
-        await ctx.send("Game started")
+        if 1 < len(self.__members) < 5:
 
-        magicarr = self.game.show_all_decks()
+            self.game = Game(self.__members)
 
-        for magic in magicarr:
-            user = await self.client.fetch_user(magic[0])
-            user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
-            user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
-            user_hand_embed.add_field(name="Choice", value=magic[2], inline=False)
-            await user.send(embed=user_hand_embed)
-            await user.send(f"{self.game.show_current_user().name} Start this game")
+            await ctx.send("Game started")
+
+            magicarr = self.game.show_all_decks()
+
+            for magic in magicarr:
+                user = await self.client.fetch_user(magic[0])
+                user_hand_embed = discord.Embed(title="Your Deck", color=0xffffff)
+                user_hand_embed.add_field(name="Hand", value=magic[1], inline=False)
+                user_hand_embed.add_field(name="Choice", value=magic[2], inline=False)
+                await user.send(embed=user_hand_embed)
+                await user.send(f"{self.game.show_current_user().name} Start this game")
+        
+        else:
+            await ctx.send("Invalid number of players :(")
 
     @commands.command()
     async def play(self, ctx, *cards):
