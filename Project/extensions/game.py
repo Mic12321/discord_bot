@@ -13,7 +13,7 @@ class Player:
 
 class Game:   
     def __init__(self, players):
-        self.powers = { "3:diamonds:" : 1, " 3:skull_crossbones:" : 2,  "3:hearts:" : 3,  "3:heart_on_fire:" : 4,
+        self.powers = { "3:diamonds:" : 1,  "3:skull_crossbones:" : 2,  "3:hearts:" : 3,  "3:heart_on_fire:" : 4,
                         "4:diamonds:" : 5,  "4:skull_crossbones:" : 6,  "4:hearts:" : 7,  "4:heart_on_fire:" : 8,
                         "5:diamonds:" : 9,  "5:skull_crossbones:" : 10, "5:hearts:" : 11, "5:heart_on_fire:" : 12,
                         "6:diamonds:" : 13, "6:skull_crossbones:" : 14, "6:hearts:" : 15, "6:heart_on_fire:" : 16,
@@ -322,9 +322,12 @@ class Game_Room(commands.Cog):
         remove_content("game_file", ctx.author.id)
         self.__members.remove(f"<@{ctx.author.id}>")
         await ctx.send(f"<@{ctx.author.id}> You have left the game successfully")
-        await ctx.send(f"Game finished because of the leaver! <@{ctx.author.id}> is loser, {' '.join(self.__members)} are winners!")
-        self.__game = None
 
+        for userid in self.__game.show_all_userids():
+            user = await self.client.fetch_user(userid)
+            await user.send(f"Game finished because of the leaver! <@{ctx.author.id}> is loser, {' '.join(self.__members)} are winners!")
+
+        self.__game = None
 
     def get_room_name(self):
         return self.__room_name
