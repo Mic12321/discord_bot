@@ -385,7 +385,7 @@ class Game_Room(commands.Cog):
         if one_card[1] == 0:
             for userid in self.__game.show_all_userids():
                 user = await self.client.fetch_user(userid)
-                await user.send(one_card[1][0])
+                await user.send(one_card[0])
         
         else:
             game_fin = self.__game.game_finished()
