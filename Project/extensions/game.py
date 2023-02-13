@@ -123,6 +123,9 @@ class Game:
     def show_current_user(self):
         return self.__players[self.current_player]
 
+    def show_play_order(self):
+        return ' '.join([player.name for player in self.__players])
+
     def show_all_decks(self):
         return [self.show_deck(player) for player in self.__players]
 
@@ -195,16 +198,16 @@ class Game:
             if self.user_power == 400:      # four of a kind
                 self.user_power = self.four_of_a_kind(cards) + 300
 
-            elif self.user_power == 300:    # full house
+            if self.user_power == 300:    # full house
                 self.user_power = self.full_house(cards) + 200
 
-            elif self.user_power == 200:    # flush
+            if self.user_power == 200:    # flush
                 self.user_power = self.flush(cards) + 100
 
-            elif self.user_power == 100:    # straight
+            if self.user_power == 100:    # straight
                 self.user_power = self.straight(cards)
 
-            else:
+            if self.user_power == 0:
                 self.user_power = -1
                 return ["Your choice is not a valid 5 cards combination", -1]
 
@@ -351,6 +354,7 @@ class Game_Room(commands.Cog):
                 user_hand_embed.add_field(name=magic[1], value=magic[2], inline=False)
                 await user.send(embed=user_hand_embed)
                 await user.send(f"{self.__game.show_current_user().name} Start this game")
+                await user.send(f"The players order: {self.__game.show_play_order()}")
         
         else:
             await ctx.send("Invalid number of players :(")
