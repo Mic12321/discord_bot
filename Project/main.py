@@ -113,9 +113,10 @@ async def main():
         CLIENT_TOKEN=file.readline()
         file.close()
 
-        client.CLIENT_NAME="lucky bot"
-        client.CLIENT_AUTHOR="Mic12321"
-        client.CLIENT_VERSION="0.1"
+        # client.CLIENT_NAME="lucky bot"
+        client.CLIENT_NAME="Scripted bot"
+        client.CLIENT_AUTHOR="Mic12321 && ScriptLuck"
+        client.CLIENT_VERSION="0.2"
         client.CLIENT_START_TIME=datetime.datetime.now()
 
         client.CLIENT_REPOSITORY_URL="https://github.com/Mic12321/discord_bot"

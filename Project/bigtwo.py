@@ -10,7 +10,6 @@ def takepower(elem):
 def straight(cards):
     cards.sort(key = takepower)
     card_powers = [(powers[cards[0]] - 1) // 4, (powers[cards[1]] - 1) // 4, (powers[cards[2]] - 1) // 4, (powers[cards[3]] - 1) // 4, (powers[cards[4]] - 1) // 4]
-    
     if card_powers[0] + 2 == card_powers[1] + 1 == card_powers[2] == card_powers[3] - 1 == card_powers[4] - 2:  # normal straight
         return powers[cards[4]]
 
@@ -59,7 +58,7 @@ def four_of_a_kind(cards):
     if cards[0][0] == cards[1][0] == cards[2][0] == cards[3][0]:        # 3 3 3 3 4 and other
         return powers[cards[3]]
 
-    elif cards[1][0] and cards[2][0] == cards[3][0] == cards[4][0]:     # 3 4 4 4 4 and other
+    elif cards[1][0] == cards[2][0] == cards[3][0] == cards[4][0]:     # 3 4 4 4 4 and other
         return powers[cards[4]]
 
     else:
@@ -108,15 +107,14 @@ for i in range(players_number):
     name = input(F"Input name of player {i+1}: ")
     names.append(name)
     hand = [deck[j] for j in range(len(deck)) if j%4 == i]
-    hand.sort(key = takepower)
+    # hand.sort(key = takepower)        # do NOT sort :)
     players_cards.append(hand)
 
 passes = 0
-current_player = 0
+current_player = [min(players_cards[i], key=takepower) for i in range(players_number)].index(min([min(players_cards[i], key=takepower) for i in range(players_number)]))
 current_power = 0
 current_cards = []
 user_power = 0
-
 combination = 0
 
 # game
@@ -127,13 +125,13 @@ while True:
 
         # show player and their deck
         print(F"\nPlayer: {names[current_player]}")
+
+        print(' '.join(sorted(players_cards[current_player], key=takepower)))
         print(' '.join(players_cards[current_player]))
+        print(' '.join([str(i+1) + ' ' * (1-(i+1)//10) for i in range(len(players_cards[current_player]))]))
 
-        for i in range(len(players_cards[current_player])):
-            print(i + 1, ' ' * (1-(i+1)//10), end = '')
+        userinput = input("\nUse number below cards to play (or 0 - to pass): ").split()
 
-        userinput = input("\n\nUse number below cards to play (or 0 - to pass): ").split()
-        
         userchoice = [int(i) - 1 for i in userinput if i.isdigit()]
         userchoice.sort(reverse = True)
 
@@ -275,8 +273,12 @@ while True:
         else:
             print("Invalid card choice, try again")
 
+    # check if the person has only 1 more card, and annouce if yes
+    if len(players_cards[current_player]) == 1:
+        print(f"{names[current_player]} has only 1 more card!")
+
     # check if the person won the game
-    if not players_cards[current_player]:
+    elif not players_cards[current_player]:
 
         # define a winner
         winner = current_player
